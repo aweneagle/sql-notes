@@ -1,0 +1,29 @@
+{
+    "global": {
+        "local": true,
+        "info_log": "",
+        "error_log": ""
+    },
+    "qbus": {
+        "conf_file": "./conf/qbus-producer.properties",
+        "cluster": "corp"
+    },
+    "canal": {
+        "port": 11111,
+        "distination": "canal-qbus"
+    },
+    "topics": [
+        {
+            "topic": "mysql_bin_log",
+            "dbs": ["db_yl_themes"],
+            "tables": ["tb_yl_*", "resource_rule", "tmp", "tmp_*s"],
+            "events": ["*"]
+        },
+        {
+            "topic": "test",
+            "dbs": ["db_yl_themes"],
+            "tables": ["resource_rule", "tmp_ids"],
+            "events": ["INSERT", "CREATE", "UPDATE"]
+        }
+    ]
+}
