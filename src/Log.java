@@ -12,7 +12,7 @@ public class Log
 
     public static void init()
     {
-		w = LoggerFactory.getLogger(Log.class);
+        w = LoggerFactory.getLogger(Log.class);
         redirect("error_log");
         redirect("info_log");
     }

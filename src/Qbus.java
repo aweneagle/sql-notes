@@ -14,53 +14,53 @@ import org.slf4j.LoggerFactory;
 
 public class Qbus implements Session{
 
-	/* 
-	 * qbus
-	 */
-	protected KafkaProducer<String, String> qbus;
-	
-	private String conf_file;
-	
+    /* 
+     * qbus
+     */
+    protected KafkaProducer<String, String> qbus;
+    
+    private String conf_file;
+    
 
     private ArrayList<String> topicNames;
-	
-	private String cluster;
+    
+    private String cluster;
 
     protected boolean alive = false;
 
     protected Logger logger;
-	
-	
-	public Qbus()
-	{		
+    
+    
+    public Qbus()
+    {       
         alive = false;
-		logger = LoggerFactory.getLogger(Qbus.class);
-		this.cluster = Config.get("qbus").getString("cluster");
-		this.conf_file = Config.get("qbus").getString("conf_file");
+        logger = LoggerFactory.getLogger(Qbus.class);
+        this.cluster = Config.get("qbus").getString("cluster");
+        this.conf_file = Config.get("qbus").getString("conf_file");
         this.topicNames = new ArrayList<String>();
         List<JsonObject> topicObjs = Config.getTopics();
         for (JsonObject tobj : topicObjs) {
             topicNames.add(tobj.getString("topic"));
         }
-	}
-	
-	public void conn() throws Exception 
-	{
-		qbus = new QbusProducer<String, String>(cluster, conf_file, topicNames).getProducer();
+    }
+    
+    public void conn() throws Exception 
+    {
+        qbus = new QbusProducer<String, String>(cluster, conf_file, topicNames).getProducer();
         logger.info("connection established");
         alive = true;
-	}
-	
-	public void close() throws Exception 
-	{
+    }
+    
+    public void close() throws Exception 
+    {
         if (alive) {
-		    qbus.close();
+            qbus.close();
             logger.info("connetion close");
         }
-	}
-	
-	public void send(Msg msg) throws Exception 
-	{
+    }
+    
+    public void send(Msg msg) throws Exception 
+    {
         for (Msg.Record record : msg.records) {
             if (record.data != null) {
                 record.receiver = Router.getTopics(record.data);
@@ -76,18 +76,18 @@ public class Qbus implements Session{
                 logger.info("ignored:" + record.debugStr());
             }
         }
-	}
+    }
 
 
-	public Msg recv() throws Exception
-	{
-		// nothing to do
-		throw new Exception("Qbus::recv() should not be called");
-	}
+    public Msg recv() throws Exception
+    {
+        // nothing to do
+        throw new Exception("Qbus::recv() should not be called");
+    }
 
-	public void ack() throws Exception {
-		// nothing to do
-		throw new Exception("Qbus::ack() should not be called");
-	}
-	
+    public void ack() throws Exception {
+        // nothing to do
+        throw new Exception("Qbus::ack() should not be called");
+    }
+    
 }

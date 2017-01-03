@@ -7,10 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;  
 
 public class Main {
-	
-	private static Logger logger;
+    
+    private static Logger logger;
     private static MysqlQueue q;
-	
+    
     public static void main(String args[]) {
         String cfgFile = "./conf/canal-qbus.json";
         try {
@@ -22,8 +22,8 @@ public class Main {
         Router.init();
         Log.init();
         q = new MysqlQueue();
-		logger = LoggerFactory.getLogger(Main.class);
-    	Runtime.getRuntime().addShutdownHook(new Thread() {
+        logger = LoggerFactory.getLogger(Main.class);
+        Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 logger.info("shut down by KILL ....");
                 //q.Stop();

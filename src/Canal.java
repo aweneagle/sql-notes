@@ -34,22 +34,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;  
 
 public class Canal implements Session {
-	final int BATCH_NUM = 1;
-	
-	private long currRecordId = 0;
+    final int BATCH_NUM = 1;
+    
+    private long currRecordId = 0;
 
-	private Logger logger;
+    private Logger logger;
 
     private static HashMap<Integer, String> eventTypeMap;
-	
+    
     private boolean alive = false;
 
     private Pattern oldTablePattern ;
-	
-	/*
-	 * canal
-	 */
-	private CanalConnector canal;
+    
+    /*
+     * canal
+     */
+    private CanalConnector canal;
 
     public Canal()
     {
@@ -66,12 +66,12 @@ public class Canal implements Session {
         eventTypeMap.put(EventType.CINDEX.getNumber(), "cindex");
         eventTypeMap.put(EventType.DINDEX.getNumber(), "dindex");
         oldTablePattern = Pattern.compile("rename\\s+table\\s+([^\\s]+)\\s+to\\s+[^\\s]+");
-		logger = LoggerFactory.getLogger(Canal.class);
+        logger = LoggerFactory.getLogger(Canal.class);
     }
-	
+    
 
-	public void conn() throws Exception {
-		canal = CanalConnectors.newSingleConnector(
+    public void conn() throws Exception {
+        canal = CanalConnectors.newSingleConnector(
                 new InetSocketAddress(
                     AddressUtils.getHostIp(), 
                     Config.get("canal").getInt("port")
@@ -80,29 +80,29 @@ public class Canal implements Session {
                 Config.get("canal").getString("user", ""), 
                 Config.get("canal").getString("pass", "")
                 );
-		canal.connect();
+        canal.connect();
         logger.info("connection established");
         alive = true;
-		canal.subscribe();
-	}
+        canal.subscribe();
+    }
 
-	public void close() throws Exception
-	{
+    public void close() throws Exception
+    {
         if (alive) {
-		    canal.disconnect();
+            canal.disconnect();
             logger.info("connection closed");
             alive = false;
         }
-	}
+    }
 
-	public void send(Msg msg) throws Exception
-	{
-		throw new Exception("should not call Canal::send() method");
-	}
+    public void send(Msg msg) throws Exception
+    {
+        throw new Exception("should not call Canal::send() method");
+    }
 
-	public Msg recv() throws Exception
-	{
-		long timeout = 1000;
+    public Msg recv() throws Exception
+    {
+        long timeout = 1000;
         Message records;
         try {
             records = canal.getWithoutAck(BATCH_NUM, timeout, TimeUnit.MILLISECONDS);
@@ -110,7 +110,7 @@ public class Canal implements Session {
             e.printStackTrace();
             return null;
         }
-		currRecordId = records.getId();
+        currRecordId = records.getId();
         /* -1 是心跳包
          */
         /*
@@ -120,17 +120,17 @@ public class Canal implements Session {
         */
         List<JsonObject> list = new ArrayList<JsonObject>();
 
-		for (Entry e : records.getEntries()) {
+        for (Entry e : records.getEntries()) {
             JsonObject rc = parseRecord(e);
             if (rc != null) {
                 list.add(rc);
             }
-		}
+        }
         return new Msg(list, currRecordId);
-	}
-	
-	public void ack() throws Exception
-	{
+    }
+    
+    public void ack() throws Exception
+    {
         /*
          * -1 是心跳包
          */
@@ -139,23 +139,23 @@ public class Canal implements Session {
             logger.info("canal ack: {}", currRecordId);
         }
         */
-		canal.ack(this.currRecordId);
-	}
+        canal.ack(this.currRecordId);
+    }
 
-	private JsonObject parseRecord(Entry entry) throws Exception
-	{
-		JsonObject res = null;
-		JsonObjectBuilder data = Json.createObjectBuilder();
+    private JsonObject parseRecord(Entry entry) throws Exception
+    {
+        JsonObject res = null;
+        JsonObjectBuilder data = Json.createObjectBuilder();
 
         // get table name
         String tableName = entry.getHeader().getTableName();
         data.add("table", tableName);
         data.add("db", entry.getHeader().getSchemaName());
 
-		if (entry.getEntryType() == EntryType.ROWDATA) {
+        if (entry.getEntryType() == EntryType.ROWDATA) {
             RowChange rc = null;
             try {
-            	rc = RowChange.parseFrom(entry.getStoreValue());
+                rc = RowChange.parseFrom(entry.getStoreValue());
             } catch (Exception e) {
                 throw new RuntimeException("parse event has an error, error:" + e.getMessage() + ", data:" + entry.toString());
             }
@@ -163,7 +163,7 @@ public class Canal implements Session {
             // 获取操作类型 event type
             EventType eventType = rc.getEventType();
             String sql = rc.getSql();
-        	data.add("sql", sql);
+            data.add("sql", sql);
             data.add("event", eventTypeMap.get(eventType.getNumber()));
             JsonArrayBuilder rows = Json.createArrayBuilder();
             int et = eventType.getNumber();
@@ -183,11 +183,11 @@ public class Canal implements Session {
                     switch (et) {
                         case EventType.INSERT_VALUE:
                         case EventType.UPDATE_VALUE:
-                    	    getColumns(rowData.getAfterColumnsList(), rows);
+                            getColumns(rowData.getAfterColumnsList(), rows);
                             break;
 
                         case EventType.DELETE_VALUE:
-                    	    getColumns(rowData.getBeforeColumnsList(), rows);
+                            getColumns(rowData.getBeforeColumnsList(), rows);
                             break;
 
                         default:
@@ -201,16 +201,16 @@ public class Canal implements Session {
             
             res = data.build();
             
-		}
-		
-		return res;
-	}
-	
-	private void getColumns(List<Column> columns, JsonArrayBuilder rows)
-	{
-		JsonObjectBuilder col = Json.createObjectBuilder();
+        }
+        
+        return res;
+    }
+    
+    private void getColumns(List<Column> columns, JsonArrayBuilder rows)
+    {
+        JsonObjectBuilder col = Json.createObjectBuilder();
         for (Column column : columns) {
-    		JsonObjectBuilder field = Json.createObjectBuilder();
+            JsonObjectBuilder field = Json.createObjectBuilder();
             StringBuilder builder = new StringBuilder();
             String fieldName = column.getName();
             field.add("value", column.getValue());
@@ -219,5 +219,5 @@ public class Canal implements Session {
             col.add(fieldName, field);
         }
         rows.add(col);
-	}
+    }
 }
