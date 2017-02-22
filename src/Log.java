@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import java.io.PrintStream;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 public class Log
 {
@@ -21,10 +22,11 @@ public class Log
     {
         String log_file = Config.get("global").getString(logtype, "");
         if (log_file.equals("")) {
-            return false;
+            return true;
         }
         try {  
-            PrintStream p = new PrintStream(new BufferedOutputStream(new FileOutputStream(log_file)));
+            PrintStream p;
+            p = new PrintStream(new BufferedOutputStream(new FileOutputStream(log_file)));
             if (logtype.equals("info_log")) {
                 System.setOut(p);
             } else if (logtype.equals("error_log")) {

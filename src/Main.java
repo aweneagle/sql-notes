@@ -15,12 +15,12 @@ public class Main {
         String cfgFile = "./conf/canal-qbus.json";
         try {
             Config.init(cfgFile);
+            Log.init();
         } catch (Exception e) {
             System.out.println("[" + cfgFile + "], failed to load config file, error:" + e.getMessage());
             return;
         }
         Router.init();
-        Log.init();
         q = new MysqlQueue();
         logger = LoggerFactory.getLogger(Main.class);
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -31,18 +31,5 @@ public class Main {
         });
         q.Start();
         logger.info("here we go");
-        /*
-        try {
-            Thread t = new Thread() {
-                public void run() {
-                    q.Start();
-                }
-            };
-            t.start();
-            t.join();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        */
     }
 }

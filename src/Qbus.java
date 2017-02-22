@@ -69,11 +69,7 @@ public class Qbus implements Session{
                 }
                 if (record.receiver.size() > 0) {
                     logger.info("send succefully:" + record.debugStr());
-                } else {
-                    logger.info("ignored:" + record.debugStr());
                 }
-            } else {
-                logger.info("ignored:" + record.debugStr());
             }
         }
     }

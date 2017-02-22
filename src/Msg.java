@@ -57,7 +57,9 @@ public class Msg
         {
             String ids = "";
             for (JsonObject r : rows) {
-                ids += r.getJsonObject("id").getString("value", "");
+                if (r.getJsonObject("id") != null) {
+                    ids += r.getJsonObject("id").getString("value", "") + ",";
+                }
             }
             return ids;
         }

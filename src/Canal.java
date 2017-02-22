@@ -35,17 +35,17 @@ import org.slf4j.LoggerFactory;
 
 public class Canal implements Session {
     final int BATCH_NUM = 1;
-    
+
     private long currRecordId = 0;
 
     private Logger logger;
 
     private static HashMap<Integer, String> eventTypeMap;
-    
+
     private boolean alive = false;
 
     private Pattern oldTablePattern ;
-    
+
     /*
      * canal
      */
@@ -68,7 +68,7 @@ public class Canal implements Session {
         oldTablePattern = Pattern.compile("rename\\s+table\\s+([^\\s]+)\\s+to\\s+[^\\s]+");
         logger = LoggerFactory.getLogger(Canal.class);
     }
-    
+
 
     public void conn() throws Exception {
         canal = CanalConnectors.newSingleConnector(
@@ -104,20 +104,15 @@ public class Canal implements Session {
     {
         long timeout = 1000;
         Message records;
-        try {
-            records = canal.getWithoutAck(BATCH_NUM, timeout, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        records = canal.getWithoutAck(BATCH_NUM, timeout, TimeUnit.MILLISECONDS);
         currRecordId = records.getId();
         /* -1 是心跳包
-         */
-        /*
-        if (currRecordId != -1) {
-            logger.info("canal receive: {}", currRecordId);
-        }
         */
+        /*
+           if (currRecordId != -1) {
+           logger.info("canal receive: {}", currRecordId);
+           }
+           */
         List<JsonObject> list = new ArrayList<JsonObject>();
 
         for (Entry e : records.getEntries()) {
@@ -128,17 +123,17 @@ public class Canal implements Session {
         }
         return new Msg(list, currRecordId);
     }
-    
+
     public void ack() throws Exception
     {
         /*
          * -1 是心跳包
          */
         /*
-        if (currRecordId != -1) {
-            logger.info("canal ack: {}", currRecordId);
-        }
-        */
+           if (currRecordId != -1) {
+           logger.info("canal ack: {}", currRecordId);
+           }
+           */
         canal.ack(this.currRecordId);
     }
 
@@ -159,12 +154,17 @@ public class Canal implements Session {
             } catch (Exception e) {
                 throw new RuntimeException("parse event has an error, error:" + e.getMessage() + ", data:" + entry.toString());
             }
-            
+
             // 获取操作类型 event type
             EventType eventType = rc.getEventType();
             String sql = rc.getSql();
             data.add("sql", sql);
-            data.add("event", eventTypeMap.get(eventType.getNumber()));
+            String eventStr = eventTypeMap.get(eventType.getNumber());
+            if (eventStr == null) {
+                logger.info("unknown eventType: {}", eventType.getNumber());
+                eventStr = "unknown:" + eventType.getNumber();
+            }
+            data.add("event", eventStr);
             JsonArrayBuilder rows = Json.createArrayBuilder();
             int et = eventType.getNumber();
             if (eventType == EventType.QUERY  || rc.getIsDdl()) {
@@ -198,14 +198,14 @@ public class Canal implements Session {
                 }
             }
             data.add("rows", rows);
-            
+
             res = data.build();
-            
+
         }
-        
+
         return res;
     }
-    
+
     private void getColumns(List<Column> columns, JsonArrayBuilder rows)
     {
         JsonObjectBuilder col = Json.createObjectBuilder();
