@@ -1,8 +1,6 @@
 {
     "global": {
-        "local": true,
-        "info_log": "",
-        "error_log": ""
+        "local": true
     },
     "qbus": {
         "conf_file": "./conf/qbus-producer.properties",
@@ -16,7 +14,7 @@
         {
             "topic": "mysql_bin_log",
             "dbs": ["db_yl_themes"],
-            "tables": ["tb_yl_*", "resource_rule", "tmp", "tmp_*s"],
+            "tables": ["*"],
             "events": ["*"]
         },
         {
